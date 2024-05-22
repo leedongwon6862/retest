@@ -5,15 +5,24 @@
     <title>Title</title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.2/dist/full.min.css" rel="stylesheet" type="text/css"/>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 마크다운 에디터-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+    <script src="https://kit.fontawesome.com/2740360466.js" crossorigin="anonymous"></script>
 </head>
 <body>
 <div class="bg-yellow-400"
 th:with="notebookList=${mainDataDto.notebookList},
         noteList=${mainDataDto.noteList},
         targetNotebook=${mainDataDto.targetNotebook},
-        targetNote=${mainDataDto.targetNote}">
+        targetNote=${mainDataDto.targetNote},
+        searchedNotebookList=${mainDataDto.searchedNotebookList},
+        searchedNoteList=${mainDataDto.searchedNoteList}">
+    <input type="hidden" id="isSearchModal" th:value="${isSearchModal}">
+
     <div class="bg-blue-300">
         <a href="/">logo</a>
+        <a href="/user/logout">로그아웃</a>
     </div>
     <div class="bg-red-600 flex">
         <div class="bg-indigo-300 w-[20%]">
@@ -50,6 +59,66 @@ th:with="notebookList=${mainDataDto.notebookList},
             <form th:action="@{|/groups/${targetNotebook.id}/books/write|}" method="post">
                 <input type="submit" value="하위 노트북 추가">
             </form>
+
+            <form th:action="@{|/books/${targetNotebook.id}/delete|}" method="post">
+                <input type="submit" class="btn" value="삭제" >
+                <!-- The button to open modal -->
+                <label for="my_modal_6" class="btn">이름 변경</label>
+
+
+            <!-- Put this part before </body> tag -->
+            <input type="checkbox" id="my_modal_6" class="modal-toggle" />
+            <div class="modal" role="dialog">
+                <div class="modal-box">
+
+                    <form th:action="@{|/books/${targetNotebook.id}/update|}" method="post">
+                        <input type="hidden" name="targetNoteId" th:value="${targetNote.id}">
+                        <input type="text" class="input" name="name" th:value="${targetNotebook.name}">
+                        <input type="submit" class="btn" value="이름 변경">
+                    </form>
+                    <div class="modal-action">
+                        <label for="my_modal_6" class="btn">Close!</label>
+                    </div>
+                </div>
+            </div>
+
+
+            </form>
+            <!-- Open the modal using ID.showModal() method -->
+            <button class="btn" onclick="searchModal.showModal()">검색</button>
+            <dialog id="searchModal" class="modal">
+                <div class="modal-box h-[550px]" >
+
+                    <div class="h-[15%]">
+                        <form action="/" class="flex justify-center gap-2">
+                            <input type="text" name="keyword" class="input input-bordered">
+                            <input type="hidden" name="isSearchModal" value="true" >
+                            <input type="submit" class="btn" value="검색">
+                        </form>
+                    </div>
+
+                    <ul class="h-[70%] border-2 overflow-auto">
+                        <li th:each="notebook : ${searchedNotebookList} " class="hover:bg-blue-600 p-[10px] hover:text-white flex gap-2" >
+                            <i class="fa-solid fa-book "></i>
+                            <a href="#" th:text="${notebook.name}" class="inline-block w-[100%]"></a>
+                        </li>
+
+                        <li th:each="note : ${searchedNoteList} "class="hover:bg-blue-600 p-[10px] hover:text-white flex gap-2">
+                            <i class="fa-solid fa-book-open "></i>
+                            <a href="#" th:text="${note.title}" class="inline-block w-[100%]"></a>
+                        </li>
+                    </ul>
+
+
+                    <div class="modal-action">
+                        <form method="dialog">
+                            <!-- if there is a button in form, it will close the modal -->
+                            <button class="btn">Close</button>
+                        </form>
+                    </div>
+                </div>
+            </dialog>
+
         </div>
         <div class="bg-red-300 w-[20%] h-[800px] text-center ">
             <ul class="h-[100%] overflow-scroll">
@@ -73,7 +142,7 @@ th:with="notebookList=${mainDataDto.notebookList},
                     <input type="text" name="title" th:value="${targetNote.title}">
                 </div>
                 <div>
-                    <textarea name="content" cols="30" rows="10" th:text="${targetNote.content}"></textarea>
+                    <textarea id="content" name="content" cols="30" rows="10" th:text="${targetNote.content}"></textarea>
                 </div>
                 <div>
                     <input type="button" value="수정" onclick="updateForm()">
@@ -101,5 +170,19 @@ th:with="notebookList=${mainDataDto.notebookList},
             form.submit();
         }
     }
+</script>
+
+<script>
+    // 마크 다운에디터
+    var simplemde = new SimpleMDE({element:document.getElementById("content")});
+</script>
+
+
+<script>
+    const isSearchModal = document.querySelector("#isSearchModal").value;
+    if(JSON.parse(isSearchModal)){
+     searchModal.showModal();
+    }
+
 </script>
 </html>
